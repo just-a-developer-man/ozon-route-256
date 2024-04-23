@@ -7,8 +7,8 @@ import (
 )
 
 type ssStat struct {
-	redCount      int
 	blueCount     int
+	redCount      int
 	inappropriate bool
 	black         bool
 }
@@ -46,6 +46,10 @@ func main() {
 		for wordIndex, word := range words[:blueWordsCount+redWordsCount] {
 			substrings := GenerateBlueRedSubstrings(word)
 
+			ssStat := substringsStats[word]
+			ssStat.inappropriate = true
+			substringsStats[word] = ssStat
+
 			if len(substrings) < 1 {
 				continue
 			}
@@ -55,37 +59,30 @@ func main() {
 				}
 				if checkSubstringAppropriate(substring, substringsStats) {
 					ansPresent = true
-					if substringStat, ok := substringsStats[substring]; ok {
-						if wordIndex < blueWordsCount {
-							substringStat.blueCount++
-							substringsStats[substring] = substringStat
-						} else {
-							substringStat.redCount++
-							substringsStats[substring] = substringStat
-						}
+					substringStat := substringsStats[substring]
+					if wordIndex < blueWordsCount {
+						substringStat.blueCount++
+						substringsStats[substring] = substringStat
 					} else {
-						substringStat = ssStat{}
-						if wordIndex < blueWordsCount {
-							substringStat.blueCount++
-							substringsStats[substring] = substringStat
-						} else {
-							substringStat.redCount++
-							substringsStats[substring] = substringStat
-						}
+						substringStat.redCount++
+						substringsStats[substring] = substringStat
 					}
 				}
 			}
 		}
 		if ansPresent {
 			ansSubstr, ansDiff := findMaxDiff(substringsStats)
-			fmt.Fprintln(out, ansSubstr, ansDiff)
+			if ansSubstr == "" {
+				fmt.Fprintln(out, "asdfsdw", 0)
+			} else {
+				fmt.Fprintln(out, ansSubstr, ansDiff)
+			}
 		} else {
 			fmt.Fprintln(out, "lkjfslkjf", 0)
 		}
 
 		datasets--
 	}
-
 }
 
 func GenerateBlueRedSubstrings(in string) map[string]struct{} {
@@ -130,7 +127,7 @@ func calculateSubstrings(in string) int {
 
 func checkSubstringAppropriate(substring string, substringsStats map[string]ssStat) bool {
 	if _, ok := substringsStats[substring]; ok {
-		if substringsStats[substring].inappropriate == true {
+		if substringsStats[substring].inappropriate {
 			return false
 		}
 	}
@@ -139,7 +136,7 @@ func checkSubstringAppropriate(substring string, substringsStats map[string]ssSt
 
 func checkSubstringIsBlack(substring string, substringsStats map[string]ssStat) bool {
 	if substringStat, ok := substringsStats[substring]; ok {
-		if substringStat.black == true {
+		if substringStat.black {
 			return true
 		}
 	}
@@ -149,7 +146,6 @@ func checkSubstringIsBlack(substring string, substringsStats map[string]ssStat) 
 func findMaxDiff(substringsStats map[string]ssStat) (string, int) {
 	ansSubstr := ""
 	ansDiff := 0
-	fmt.Println(substringsStats)
 	for substr, stat := range substringsStats {
 		if stat.inappropriate || stat.black {
 			continue
